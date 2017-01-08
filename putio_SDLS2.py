@@ -23,7 +23,7 @@ d = DownloadStationAPI(host=config.SYNOLOGY_URL, username=config.SYNOLOGY_USERNA
 files = client.File.list(config.DOWNLOAD_DIR_ID)
 current_downloads = d.get_status()
 #parsed = json.loads(current_downloads)
-logging.info( json.dumps(current_downloads, indent=4, sort_keys=True))
+#logging.info( json.dumps(current_downloads, indent=4, sort_keys=True))
 logging.info("Currently downloading: " + str(current_downloads['data']['total']))
 p = re.compile('^.*file_ids=(?P<id>[0-9]+)$')
 zipIdPattern  = re.compile('.*zipstream/(?P<zid>[0-9]+)\.zip.*$')
@@ -39,17 +39,21 @@ for download in current_downloads['data']['tasks']:
                logging.info("ZIp id {}".format(zip_id))
                zip_info= {}
                zip_info = client.File.zipInfo(int(zip_id))
-               logging.info( zip_info)
+               #logging.info( zip_info)
                for zipped_file in zip_info['missing_files']:
+                   delputio=False
                    try: 
-                       Client.File.get(int(zipped_file['id'])).delete()
-                   except Exception:
+                       client.File.get(int(zipped_file['id'])).delete()
+                       delputio=True
+                   except Exception as e :
                        logging.error('Error while deleting file in put.io %s' % zipped_file['id'])
-                   d.delete(download['id'])
+                       logging.error(str(e))
+                   if delputio: 
+                       d.delete(download['id'])
            #TODO manage no put.io file
            #elif isPutio:
             
-
+files = client.File.list(config.DOWNLOAD_DIR_ID)
 #check put.io side now           
 if not files:
     logging.info("No files to download!")
@@ -80,4 +84,4 @@ for f in files:
 #                f.delete()
     if download_status:
         logging.info("Adding file id: " + str(f.id))
-        d.add_uri(zip_url)
+        d.add_uri(zip_url,"download/complete")
