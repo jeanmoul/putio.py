@@ -1,3 +1,6 @@
+import sys
+import logging
+logging.basicConfig(level=logging.DEBUG,stream=sys.stdout)
 import time
 import requests
 import json
@@ -24,7 +27,7 @@ class DownloadStationAPI():
     def _get_auth(self):
 
         auth_url = self.host + 'webapi/auth.cgi?api=SYNO.API.Auth&version=2&method=login&account=' + self.username + '&passwd=' + self.password + '&session=DownloadStation&format=sid'
-
+        logging.debug(auth_url)
         try:
             self.response = self.session.get(auth_url)
             self.auth = json.loads(self.response.text)['data']['sid']
@@ -33,14 +36,17 @@ class DownloadStationAPI():
 
         return self.auth
 
-    def add_uri(self, url):
+    def add_uri(self, url, destination=None):
 
         data = {'api': 'SYNO.DownloadStation.Task',
                 'version': '1', 'method': 'create',
                 'session': 'DownloadStation',
                 '_sid': self.auth,
-                'uri': url
+                'uri': url,
+                'destination': destination
                 }
+        logging.debug(data)
+        logging.debug(self.url)
         self.response = self.session.post(url=self.url, data=data)
         return json.loads(self.response.text)
 
@@ -54,4 +60,18 @@ class DownloadStationAPI():
                 }
         self.response = requests.post(url=self.url, data=data)
 
+        return json.loads(self.response.text)
+
+
+
+    def delete(self,id):
+        data = {'api': 'SYNO.DownloadStation.Task',
+                'version': '1', 'method': 'delete',
+		'_sid': self.auth,
+		'id': id
+		}
+        logging.debug(self.url)
+        logging.debug(data)
+        self.response = requests.delete(url=self.url, data=data)
+        logging.debug(json.dumps(self.response.text))
         return json.loads(self.response.text)

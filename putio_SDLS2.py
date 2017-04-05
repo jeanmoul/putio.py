@@ -38,6 +38,7 @@ for download in current_downloads['data']['tasks']:
                zip_id = isZip.group(1)
                logging.info("ZIp id {}".format(zip_id))
                zip_info= {}
+               #Todo check if the zip exist
                zip_info = client.File.zipInfo(int(zip_id))
                #logging.info( zip_info)
                for zipped_file in zip_info['missing_files']:
